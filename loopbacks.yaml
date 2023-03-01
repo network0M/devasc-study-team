@@ -1,0 +1,55 @@
+---
+- name: CONFIGURE LO1 PARAMETERS
+  hosts: CSR1kv
+  gather_facts: false
+  connection: local
+  tasks:
+    - name: SET LO1 PARAMETERS
+      ios_config:
+        parents: "interface loopback1"
+        lines:
+          - description LAN
+          - ip address 10.0.0.1 255.0.0.0
+- name: CONFIGURE LO2 PARAMETERS
+  hosts: CSR1kv
+  gather_facts: false
+  connection: local
+  tasks:
+    - name: SET LO2 
+      ios_config:
+        lines:
+          - interface loopback2
+          - description DMZ
+          - ip address 172.16.0.1 255.255.0.0
+    - name: SHOW IP INTERFACE BRIEF
+      ios_command:
+        commands:
+          - show ip interface brief
+      register: output
+    - name: SAVE OUTPUT ./ios_outputs/
+      copy:
+        content: "{{ output.stdout[0] }}"
+        dest: "ios_outputs/Show_{{ inventory_hostname }}_loopback_interfaces.txt"
+- name: SHOW ROUTING INFORMATION
+  hosts: CSR1kv
+  gather_facts: false
+  connection: local
+  tasks:
+    - name: SHOW CONNECTED ROUTES
+      ios_command:
+        commands:
+          - show ip route connected
+      register: output
+    - name: SAVE OUTPUT ./ios_outputs/
+      copy:
+        content: "{{ output.stdout[0] }}"
+        dest: "ios_outputs/connected_{{ inventory_hostname }}_routes.txt"
+    - name: SHOW DYNAMIC ROUTES
+      ios_command:
+        commands:
+          - show ip route eigrp
+      register: output
+    - name: SAVE OUTPUT ./ios_outputs/
+      copy:
+        content: "{{ output.stdout[0] }}"
+        dest: "ios_outputs/dynamic_{{ inventory_hostname }}_routes.txt"
